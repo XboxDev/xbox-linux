@@ -1454,6 +1454,31 @@ static const struct ide_proc_devset *ide_cd_proc_devsets(ide_drive_t *drive)
 #endif
 
 static const struct cd_list_entry ide_cd_quirks_list[] = {
+#ifdef CONFIG_X86_XBOX
+	/*
+	 * THOMSON DVD drives in the Xbox report incorrect capabilities
+	 * and do not understand the ATAPI eject command, but the SMC
+	 * can do the eject.
+	 */
+	{ "THOMSON-DVD", NULL, IDE_AFLAG_XBOX_DRIVE | IDE_AFLAG_XBOX_EJECT | IDE_AFLAG_PLAY_AUDIO_OK },
+	/*
+	 * PHILIPS drives in Xboxen manufactured pre September 2003,
+	 * report correct capabilities, but do not understand the ATAPI
+	 * eject command, hence require the SMC to do so.
+	 */
+	{ "PHILIPS XBOX DVD DRIVE", NULL, IDE_AFLAG_XBOX_DRIVE | IDE_AFLAG_XBOX_EJECT },
+	/*
+	 * PHILIPS drives in Xboxen manufactured post September 2003,
+	 * report incorrect capabilities, but understand the ATAPI
+	 * eject command.
+	 */
+	{ "PHILIPS J5 3235C", NULL, IDE_AFLAG_XBOX_DRIVE | IDE_AFLAG_XBOX_EJECT | IDE_AFLAG_PLAY_AUDIO_OK },
+	/*
+	 * SAMSUNG drives in the Xbox report correct capabilities
+	 * and understand the ATAPI eject command.
+	 */
+	{ "SAMSUNG DVD-ROM SDG-605B", NULL, IDE_AFLAG_XBOX_DRIVE },
+#endif
 	/* SCR-3231 doesn't support the SET_CD_SPEED command. */
 	{ "SAMSUNG CD-ROM SCR-3231", NULL,   IDE_AFLAG_NO_SPEED_SELECT	     },
 	/* Old NEC260 (not R) was released before ATAPI 1.2 spec. */
@@ -1539,6 +1564,28 @@ static int ide_cdrom_setup(ide_drive_t *drive)
 		/* 3 => use CD in slot 0 */
 		cdi->sanyo_slot = 3;
 
+#ifdef CONFIG_X86_XBOX
+	/* Is an Xbox drive detected? */
+	if (drive->atapi_flags & IDE_AFLAG_XBOX_DRIVE) {
+		/* If an Xbox drive is present in a regular PC, we can't eject.
+		   Act like the drive cannot eject, unless the ATAPI eject command
+		   is supported by the drive.  If the drive doesn't support ATAPI
+		   ejecting, act like door locking is impossible as well. */
+		if (!machine_is_xbox()) {
+			if (drive->atapi_flags & IDE_AFLAG_XBOX_EJECT) {
+				drive->dev_flags &= ~IDE_DFLAG_DOORLOCKING;	// Xbox Drive in PC:  Disable Door Locking
+				drive->atapi_flags |= IDE_AFLAG_NO_EJECT;	// Xbox Drive in PC:  Disable Eject
+			}
+		} else {
+			/* An Xbox drive in an Xbox.  We can support ejecting through
+			   the SMC and support drive locking in software by ignoring
+			   the eject interrupt. */
+			drive->dev_flags |= IDE_DFLAG_DOORLOCKING;	// Xbox Drive in Xbox:  Allow Door Locking
+			drive->atapi_flags &= ~IDE_AFLAG_NO_EJECT;	// Xbox Drive in Xbox:  Allow Eject
+			Xbox_simulate_drive_locked = 0;
+		}
+	}
+#endif
 	nslots = ide_cdrom_probe_capabilities(drive);
 
 	blk_queue_logical_block_size(q, CD_FRAMESIZE);

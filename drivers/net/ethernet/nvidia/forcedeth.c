@@ -56,6 +56,10 @@
 
 #include <asm/irq.h>
 
+#ifdef CONFIG_X86_XBOX
+#include <linux/xbox.h>
+#endif
+
 #define TX_WORK_PER_LOOP  64
 #define RX_WORK_PER_LOOP  64
 
@@ -1521,6 +1525,9 @@ static int phy_init(struct net_device *dev)
 	/* restart auto negotiation, power down phy */
 	mii_control = mii_rw(dev, np->phyaddr, MII_BMCR, MII_READ);
 	mii_control |= (BMCR_ANRESTART | BMCR_ANENABLE);
+#ifdef CONFIG_X86_XBOX
+	if (!machine_is_xbox())
+#endif
 	if (phy_power_down)
 		mii_control |= BMCR_PDOWN;
 	if (mii_rw(dev, np->phyaddr, MII_BMCR, mii_control))
@@ -5462,6 +5469,9 @@ static int nv_open(struct net_device *dev)
 	u32 low;
 
 	/* power up phy */
+#ifdef CONFIG_X86_XBOX
+	if (!machine_is_xbox())
+#endif
 	mii_rw(dev, np->phyaddr, MII_BMCR,
 	       mii_rw(dev, np->phyaddr, MII_BMCR, MII_READ) & ~BMCR_PDOWN);
 
@@ -5655,6 +5665,10 @@ static int nv_close(struct net_device *dev)
 
 	nv_drain_rxtx(dev);
 
+#ifdef CONFIG_X86_XBOX
+	if (machine_is_xbox())
+		phy_power_down = 0;
+#endif
 	if (np->wolenabled || !phy_power_down) {
 		nv_txrx_gate(dev, false);
 		writel(NVREG_PFF_ALWAYS|NVREG_PFF_MYADDR, base + NvRegPacketFilterFlags);

@@ -45,6 +45,96 @@
 #include <asm/vsyscall.h>
 #include <linux/vmalloc.h>
 
+#ifdef CONFIG_X86_XBOX
+#include <asm/reboot.h>
+#include <linux/xbox.h>
+
+static int __read_mostly xbox = 0;
+static int __read_mostly xbox_oneshot = 0;
+
+int machine_is_xbox(void) {
+	if (!xbox_oneshot && !xbox) {
+		xbox_oneshot = 1;
+		outl(0x80000000, 0xcf8);
+		xbox = (inl(0xcfc) == 0x02a510de); /* Xbox PCI 0:0.0 ID [10de:02a5] */
+		if (xbox) printk(KERN_INFO "Xbox hardware detected\n");
+	}
+
+	return xbox;
+}
+EXPORT_SYMBOL(machine_is_xbox);
+void xbox_smc_write(u8 d1, u8 d2) {
+	int c=4;
+	u8 b=0;
+	u32 dwSpinsToLive = 0x8000000;
+
+	/*
+	while(inw(XBOX_SMB_IO_BASE+0)&0x0800);
+	*/
+	while(c--) {
+		outb(XBOX_SMC_ADDRESS<<1, XBOX_SMB_HOST_ADDRESS);
+		outb((u8)d1, XBOX_SMB_HOST_COMMAND);
+		outb((u8)d2, XBOX_SMB_HOST_DATA);
+		outw(0xffff, XBOX_SMB_IO_BASE+0);
+		outb(0x0a, XBOX_SMB_GLOBAL_ENABLE);
+		{
+			while((b !=0x10) && ((b&0x26)==0) && (dwSpinsToLive--)) {
+				b=inb(XBOX_SMB_IO_BASE);
+			}
+			if(b&0x2) continue;
+			if(b&0x24) continue;
+			if(!(b&0x10)) continue;
+			break;
+		}
+	}
+}
+EXPORT_SYMBOL(xbox_smc_write);
+int xbox_smc_read(u8 d) {
+	int c=4;
+	u8 b=0;
+	u32 dwSpinsToLive = 0x8000000;
+
+	/*
+	while(inw(XBOX_SMB_IO_BASE+0)&0x0800);
+	*/
+	while(c--) {
+		outb((XBOX_SMC_ADDRESS<<1)|1, XBOX_SMB_HOST_ADDRESS);
+		outb(d, XBOX_SMB_HOST_COMMAND);
+		outw(0xffff, XBOX_SMB_IO_BASE+0);
+		outb(0x0a, XBOX_SMB_GLOBAL_ENABLE);
+		{
+			while((b !=0x10) && ((b&0x26)==0) && (dwSpinsToLive--)) {
+				b=inb(XBOX_SMB_IO_BASE);
+			}
+			if(b&0x2) continue;
+			if(b&0x24) continue;
+			if(!(b&0x10)) continue;
+			break;
+		}
+	}
+	return (int)inb(XBOX_SMB_HOST_DATA);
+}
+EXPORT_SYMBOL(xbox_smc_read);
+static void xbox_emergency_restart(void) {
+	xbox_powercycle();
+}
+static void xbox_restart(char *cmd) {
+	xbox_emergency_restart();
+}
+static void xbox_halt(void) {
+	xbox_poweroff();
+}
+static void xbox_power_off(void) {
+	xbox_poweroff();
+}
+static void xbox_shutdown(void) {
+}
+unsigned long xbox_pit_tick_rate(void) {
+	return (xbox) ? 1125000 : 1193182;
+}
+EXPORT_SYMBOL(xbox_pit_tick_rate);
+#endif
+
 /*
  * max_low_pfn_mapped: highest directly mapped pfn < 4 GB
  * max_pfn_mapped:     highest directly mapped pfn > 4 GB
@@ -813,6 +903,15 @@ void __init setup_arch(char **cmdline_p)
 
 #ifdef CONFIG_X86_32
 	memcpy(&boot_cpu_data, &new_cpu_data, sizeof(new_cpu_data));
+#ifdef CONFIG_X86_XBOX
+	if (machine_is_xbox()) {
+		machine_ops.restart = xbox_restart;
+		machine_ops.halt = xbox_halt;
+		machine_ops.power_off = xbox_power_off;
+		machine_ops.shutdown = xbox_shutdown;
+		machine_ops.emergency_restart = xbox_emergency_restart;
+	}
+#endif
 
 	/*
 	 * copy kernel address range established so far and switch

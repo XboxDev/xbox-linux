@@ -3109,13 +3109,13 @@ AU0828_DEVICE(0x2040, 0x7270, "Hauppauge", "HVR-950Q"),
 	}
 },
 
-/* Microsoft XboxLive Headset/Xbox Communicator */
+/* Original Xbox Communicator devices */
 {
 	USB_DEVICE(0x045e, 0x0283),
 	.bInterfaceClass = USB_CLASS_PER_INTERFACE,
 	.driver_info = (unsigned long) &(const struct snd_usb_audio_quirk) {
 		.vendor_name = "Microsoft",
-		.product_name = "XboxLive Headset/Xbox Communicator",
+		.product_name = "Xbox Communicator",
 		.ifnum = QUIRK_ANY_INTERFACE,
 		.type = QUIRK_COMPOSITE,
 		.data = &(const struct snd_usb_audio_quirk[]) {
@@ -3132,9 +3132,15 @@ AU0828_DEVICE(0x2040, 0x7270, "Hauppauge", "HVR-950Q"),
 					.attributes = 0,
 					.endpoint = 0x04,
 					.ep_attr = 0x05,
-					.rates = SNDRV_PCM_RATE_CONTINUOUS,
-					.rate_min = 22050,
-					.rate_max = 22050
+					.rates = SNDRV_PCM_RATE_8000 |
+						 SNDRV_PCM_RATE_16000 |
+						 SNDRV_PCM_RATE_24000,
+					.rate_min = 8000,
+					.rate_max = 24000,
+					.nr_rates = 3,
+					.rate_table = (unsigned int[]) {
+						8000, 16000, 24000
+					}
 				}
 			},
 			{
@@ -3161,6 +3167,61 @@ AU0828_DEVICE(0x2040, 0x7270, "Hauppauge", "HVR-950Q"),
 		}
 	}
 },
+
+#define MICRODIA_DEVICE(pid) { \
+	USB_DEVICE(0x0c45, pid), \
+	.bInterfaceClass = USB_CLASS_PER_INTERFACE, \
+	.driver_info = (unsigned long) &(const struct snd_usb_audio_quirk) { \
+		.vendor_name = "Microdia/Hip Gear", \
+		.product_name = "Xbox Communicator", \
+		.ifnum = QUIRK_ANY_INTERFACE, \
+		.type = QUIRK_COMPOSITE, \
+		.data = &(const struct snd_usb_audio_quirk[]) { \
+			{ \
+				/* playback */ \
+				.ifnum = 0, \
+				.type = QUIRK_AUDIO_FIXED_ENDPOINT, \
+				.data = &(const struct audioformat) { \
+					.formats = SNDRV_PCM_FMTBIT_S16_LE, \
+					.channels = 1, \
+					.iface = 0, \
+					.altsetting = 0, \
+					.altset_idx = 0, \
+					.attributes = 0, \
+					.endpoint = 0x01, \
+					.ep_attr = 0x05, \
+					.rates = SNDRV_PCM_RATE_CONTINUOUS, \
+					.rate_min = 8000, \
+					.rate_max = 8000 \
+				} \
+			}, \
+			{ \
+				/* capture */ \
+				.ifnum = 1, \
+				.type = QUIRK_AUDIO_FIXED_ENDPOINT, \
+				.data = &(const struct audioformat) { \
+					.formats = SNDRV_PCM_FMTBIT_S16_LE, \
+					.channels = 1, \
+					.iface = 1, \
+					.altsetting = 0, \
+					.altset_idx = 0, \
+					.attributes = 0, \
+					.endpoint = 0x82, \
+					.ep_attr = 0x05, \
+					.rates = SNDRV_PCM_RATE_CONTINUOUS, \
+					.rate_min = 8000, \
+					.rate_max = 8000 \
+				} \
+			}, \
+			{ \
+				.ifnum = -1 \
+			} \
+		} \
+	} \
+}
+MICRODIA_DEVICE(0x1c2e), /* Hip Gear Xbox Communicator */
+MICRODIA_DEVICE(0x1c7d), /* Hip Gear Xbox Communicator with Headset */
+#undef MICRODIA_DEVICE
 
 /* Reloop Play */
 {

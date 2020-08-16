@@ -24,6 +24,10 @@
 #include <sound/info.h>
 #include <sound/initval.h>
 
+#ifdef CONFIG_X86_XBOX
+#include <linux/xbox.h>
+#endif
+
 MODULE_AUTHOR("Jaroslav Kysela <perex@perex.cz>");
 MODULE_DESCRIPTION("Intel 82801AA,82901AB,i810,i820,i830,i840,i845,MX440; SiS 7012; Ali 5455");
 MODULE_LICENSE("GPL");
@@ -2951,8 +2955,15 @@ static int snd_intel8x0_create(struct snd_card *card,
 	/* module parameters */
 	chip->buggy_irq = buggy_irq;
 	chip->buggy_semaphore = buggy_semaphore;
+#ifdef CONFIG_X86_XBOX
+	if (machine_is_xbox()) {
+		xbox = 1;
+		chip->xbox = 1;
+	}
+#else
 	if (xbox)
 		chip->xbox = 1;
+#endif
 
 	chip->inside_vm = snd_intel8x0_inside_vm(pci);
 

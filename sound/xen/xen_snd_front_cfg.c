@@ -30,6 +30,7 @@ static const struct cfg_hw_sample_rate CFG_HW_SUPPORTED_RATES[] = {
 	{ .name = "11025",  .mask = SNDRV_PCM_RATE_11025,  .value = 11025 },
 	{ .name = "16000",  .mask = SNDRV_PCM_RATE_16000,  .value = 16000 },
 	{ .name = "22050",  .mask = SNDRV_PCM_RATE_22050,  .value = 22050 },
+	{ .name = "24000",  .mask = SNDRV_PCM_RATE_24000,  .value = 24000 },
 	{ .name = "32000",  .mask = SNDRV_PCM_RATE_32000,  .value = 32000 },
 	{ .name = "44100",  .mask = SNDRV_PCM_RATE_44100,  .value = 44100 },
 	{ .name = "48000",  .mask = SNDRV_PCM_RATE_48000,  .value = 48000 },

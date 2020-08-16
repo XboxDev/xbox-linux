@@ -8,6 +8,10 @@
 #include <linux/dmi.h>
 #include <asm/pci_x86.h>
 
+#ifdef CONFIG_X86_XBOX
+#include <linux/xbox.h>
+#endif
+
 /*
  * Functions for accessing PCI base (first 256 bytes) and extended
  * (4096 bytes per PCI function) configuration space with type 1
@@ -27,6 +31,10 @@ static int pci_conf1_read(unsigned int seg, unsigned int bus,
 		*value = -1;
 		return -EINVAL;
 	}
+#ifdef CONFIG_X86_XBOX
+	if (machine_is_xbox() && xbox_pci_blacklisted(bus, PCI_SLOT(devfn), PCI_FUNC(devfn)))
+		return -EINVAL;
+#endif
 
 	raw_spin_lock_irqsave(&pci_config_lock, flags);
 
@@ -56,6 +64,10 @@ static int pci_conf1_write(unsigned int seg, unsigned int bus,
 
 	if (seg || (bus > 255) || (devfn > 255) || (reg > 4095))
 		return -EINVAL;
+#ifdef CONFIG_X86_XBOX
+	if (machine_is_xbox() && xbox_pci_blacklisted(bus, PCI_SLOT(devfn), PCI_FUNC(devfn)))
+		return -EINVAL;
+#endif
 
 	raw_spin_lock_irqsave(&pci_config_lock, flags);
 

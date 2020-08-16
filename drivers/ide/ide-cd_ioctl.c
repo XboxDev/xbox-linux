@@ -120,6 +120,22 @@ int cdrom_eject(ide_drive_t *drive, int ejectflag)
 	if ((drive->atapi_flags & IDE_AFLAG_DOOR_LOCKED) && ejectflag)
 		return 0;
 
+#ifdef CONFIG_X86_XBOX
+	/* Older Xbox DVD drives don't understand the ATAPI command, but the SMC
+	   can do the eject.  Note that some Xbox drives support the eject
+	   command, namely the Samsung, so for that drive we do a regular eject
+	   sequence. */
+	if (machine_is_xbox() && drive->atapi_flags & IDE_AFLAG_XBOX_EJECT) {
+		if (ejectflag) {
+			xbox_tray_load();
+		} else {
+			Xbox_simulate_drive_locked = 0;
+			xbox_tray_eject();
+		}
+		return 0;
+	}
+#endif
+
 	/* only tell drive to close tray if open, if it can do that */
 	if (ejectflag && (cdi->mask & CDC_CLOSE_TRAY))
 		loej = 0;
@@ -138,6 +154,19 @@ int ide_cd_lockdoor(ide_drive_t *drive, int lockflag)
 {
 	struct scsi_sense_hdr sshdr;
 	int stat;
+
+#ifdef CONFIG_X86_XBOX
+	/* If we're on an Xbox and this is an Xbox drive, simulate the lock
+	   request in software. */
+	if (machine_is_xbox() && drive->atapi_flags & IDE_AFLAG_XBOX_DRIVE) {
+		if (lockflag)
+			drive->atapi_flags |= IDE_AFLAG_DOOR_LOCKED;
+		else
+			drive->atapi_flags &= ~IDE_AFLAG_DOOR_LOCKED;
+		Xbox_simulate_drive_locked = lockflag;
+		return 0;
+	}
+#endif
 
 	/* If the drive cannot lock the door, just pretend. */
 	if ((drive->dev_flags & IDE_DFLAG_DOORLOCKING) == 0) {

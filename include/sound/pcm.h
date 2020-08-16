@@ -111,23 +111,25 @@ struct snd_pcm_ops {
 #define SNDRV_PCM_RATE_11025		(1<<2)		/* 11025Hz */
 #define SNDRV_PCM_RATE_16000		(1<<3)		/* 16000Hz */
 #define SNDRV_PCM_RATE_22050		(1<<4)		/* 22050Hz */
-#define SNDRV_PCM_RATE_32000		(1<<5)		/* 32000Hz */
-#define SNDRV_PCM_RATE_44100		(1<<6)		/* 44100Hz */
-#define SNDRV_PCM_RATE_48000		(1<<7)		/* 48000Hz */
-#define SNDRV_PCM_RATE_64000		(1<<8)		/* 64000Hz */
-#define SNDRV_PCM_RATE_88200		(1<<9)		/* 88200Hz */
-#define SNDRV_PCM_RATE_96000		(1<<10)		/* 96000Hz */
-#define SNDRV_PCM_RATE_176400		(1<<11)		/* 176400Hz */
-#define SNDRV_PCM_RATE_192000		(1<<12)		/* 192000Hz */
-#define SNDRV_PCM_RATE_352800		(1<<13)		/* 352800Hz */
-#define SNDRV_PCM_RATE_384000		(1<<14)		/* 384000Hz */
+#define SNDRV_PCM_RATE_24000		(1<<5)		/* 24000Hz */
+#define SNDRV_PCM_RATE_32000		(1<<6)		/* 32000Hz */
+#define SNDRV_PCM_RATE_44100		(1<<7)		/* 44100Hz */
+#define SNDRV_PCM_RATE_48000		(1<<8)		/* 48000Hz */
+#define SNDRV_PCM_RATE_64000		(1<<9)		/* 64000Hz */
+#define SNDRV_PCM_RATE_88200		(1<<10)		/* 88200Hz */
+#define SNDRV_PCM_RATE_96000		(1<<11)		/* 96000Hz */
+#define SNDRV_PCM_RATE_176400		(1<<12)		/* 176400Hz */
+#define SNDRV_PCM_RATE_192000		(1<<13)		/* 192000Hz */
+#define SNDRV_PCM_RATE_352800		(1<<14)		/* 352800Hz */
+#define SNDRV_PCM_RATE_384000		(1<<15)		/* 384000Hz */
 
 #define SNDRV_PCM_RATE_CONTINUOUS	(1<<30)		/* continuous range */
-#define SNDRV_PCM_RATE_KNOT		(1<<31)		/* supports more non-continuos rates */
+#define SNDRV_PCM_RATE_KNOT		(1<<31)		/* supports more non-continuous rates */
 
 #define SNDRV_PCM_RATE_8000_44100	(SNDRV_PCM_RATE_8000|SNDRV_PCM_RATE_11025|\
 					 SNDRV_PCM_RATE_16000|SNDRV_PCM_RATE_22050|\
-					 SNDRV_PCM_RATE_32000|SNDRV_PCM_RATE_44100)
+					 SNDRV_PCM_RATE_24000|SNDRV_PCM_RATE_32000|\
+					 SNDRV_PCM_RATE_44100)
 #define SNDRV_PCM_RATE_8000_48000	(SNDRV_PCM_RATE_8000_44100|SNDRV_PCM_RATE_48000)
 #define SNDRV_PCM_RATE_8000_96000	(SNDRV_PCM_RATE_8000_48000|SNDRV_PCM_RATE_64000|\
 					 SNDRV_PCM_RATE_88200|SNDRV_PCM_RATE_96000)

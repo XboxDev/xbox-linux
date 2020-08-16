@@ -104,7 +104,7 @@ config X86
 	select BUILDTIME_TABLE_SORT
 	select CLKEVT_I8253
 	select CLOCKSOURCE_VALIDATE_LAST_CYCLE
-	select CLOCKSOURCE_WATCHDOG
+	select CLOCKSOURCE_WATCHDOG		if !X86_XBOX
 	select DCACHE_WORD_ACCESS
 	select EDAC_ATOMIC_SCRUB
 	select EDAC_SUPPORT
@@ -503,7 +503,17 @@ config X86_EXTENDED_PLATFORM
 
 	  If you have one of these systems, or if you want to build a
 	  generic distribution kernel, say Y here - otherwise say N.
-endif
+
+config X86_XBOX
+	bool "Xbox (Microsoft)"
+	depends on X86_32
+	---help---
+	  Xbox is a standard PC from Microsoft minus some legacy hardware.
+
+	  Only choose this option if you are building a kernel for such a
+	  machine, otherwise choose "PC-compatible".
+
+endif # X86_32
 
 if X86_64
 config X86_EXTENDED_PLATFORM
@@ -522,7 +532,8 @@ config X86_EXTENDED_PLATFORM
 
 	  If you have one of these systems, or if you want to build a
 	  generic distribution kernel, say Y here - otherwise say N.
-endif
+
+endif # X86_64
 # This is an alphabetically sorted list of 64 bit extended platforms
 # Please maintain the alphabetic order if and when there are additions
 config X86_NUMACHIP

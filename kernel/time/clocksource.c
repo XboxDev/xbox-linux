@@ -18,6 +18,10 @@
 #include "tick-internal.h"
 #include "timekeeping_internal.h"
 
+#ifdef CONFIG_X86_XBOX
+#include <linux/xbox.h>
+#endif
+
 /**
  * clocks_calc_mult_shift - calculate mult/shift factors for scaled math of clocks
  * @mult:	pointer to mult variable
@@ -739,7 +743,7 @@ static void __clocksource_select(bool skipcur)
 	if (!best)
 		return;
 
-	if (!strlen(override_name))
+	if (!override_name[0])
 		goto found;
 
 	/* Check for the override clocksource. */
@@ -814,6 +818,10 @@ static inline void clocksource_select_fallback(void) { }
 static int __init clocksource_done_booting(void)
 {
 	mutex_lock(&clocksource_mutex);
+#ifdef CONFIG_X86_XBOX
+	if (!override_name[0] && machine_is_xbox())
+		strlcpy(override_name, "pit", sizeof(override_name));
+#endif
 	curr_clocksource = clocksource_default_clock();
 	finished_booting = 1;
 	/*

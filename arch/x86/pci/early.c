@@ -5,12 +5,20 @@
 #include <asm/io.h>
 #include <asm/pci_x86.h>
 
+#ifdef CONFIG_X86_XBOX
+#include <linux/xbox.h>
+#endif
+
 /* Direct PCI access. This is used for PCI accesses in early boot before
    the PCI subsystem works. */
 
 u32 read_pci_config(u8 bus, u8 slot, u8 func, u8 offset)
 {
 	u32 v;
+#ifdef CONFIG_X86_XBOX
+	if (machine_is_xbox() && xbox_pci_blacklisted(bus, slot, func))
+		return 0xffffffff;
+#endif
 	outl(0x80000000 | (bus<<16) | (slot<<11) | (func<<8) | offset, 0xcf8);
 	v = inl(0xcfc);
 	return v;
@@ -19,6 +27,10 @@ u32 read_pci_config(u8 bus, u8 slot, u8 func, u8 offset)
 u8 read_pci_config_byte(u8 bus, u8 slot, u8 func, u8 offset)
 {
 	u8 v;
+#ifdef CONFIG_X86_XBOX
+	if (machine_is_xbox() && xbox_pci_blacklisted(bus, slot, func))
+		return 0xff;
+#endif
 	outl(0x80000000 | (bus<<16) | (slot<<11) | (func<<8) | offset, 0xcf8);
 	v = inb(0xcfc + (offset&3));
 	return v;
@@ -27,6 +39,10 @@ u8 read_pci_config_byte(u8 bus, u8 slot, u8 func, u8 offset)
 u16 read_pci_config_16(u8 bus, u8 slot, u8 func, u8 offset)
 {
 	u16 v;
+#ifdef CONFIG_X86_XBOX
+	if (machine_is_xbox() && xbox_pci_blacklisted(bus, slot, func))
+		return 0xffff;
+#endif
 	outl(0x80000000 | (bus<<16) | (slot<<11) | (func<<8) | offset, 0xcf8);
 	v = inw(0xcfc + (offset&2));
 	return v;
@@ -35,18 +51,30 @@ u16 read_pci_config_16(u8 bus, u8 slot, u8 func, u8 offset)
 void write_pci_config(u8 bus, u8 slot, u8 func, u8 offset,
 				    u32 val)
 {
+#ifdef CONFIG_X86_XBOX
+	if (machine_is_xbox() && xbox_pci_blacklisted(bus, slot, func))
+		return;
+#endif
 	outl(0x80000000 | (bus<<16) | (slot<<11) | (func<<8) | offset, 0xcf8);
 	outl(val, 0xcfc);
 }
 
 void write_pci_config_byte(u8 bus, u8 slot, u8 func, u8 offset, u8 val)
 {
+#ifdef CONFIG_X86_XBOX
+	if (machine_is_xbox() && xbox_pci_blacklisted(bus, slot, func))
+		return;
+#endif
 	outl(0x80000000 | (bus<<16) | (slot<<11) | (func<<8) | offset, 0xcf8);
 	outb(val, 0xcfc + (offset&3));
 }
 
 void write_pci_config_16(u8 bus, u8 slot, u8 func, u8 offset, u16 val)
 {
+#ifdef CONFIG_X86_XBOX
+	if (machine_is_xbox() && xbox_pci_blacklisted(bus, slot, func))
+		return;
+#endif
 	outl(0x80000000 | (bus<<16) | (slot<<11) | (func<<8) | offset, 0xcf8);
 	outw(val, 0xcfc + (offset&2));
 }

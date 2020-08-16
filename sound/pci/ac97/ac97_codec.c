@@ -1718,6 +1718,8 @@ static void snd_ac97_determine_rates(struct snd_ac97 *ac97, int reg, int shadow_
 		result |= SNDRV_PCM_RATE_16000;
 	if (snd_ac97_test_rate(ac97, reg, shadow_reg, 22050))
 		result |= SNDRV_PCM_RATE_22050;
+	if (snd_ac97_test_rate(ac97, reg, shadow_reg, 24000))
+		result |= SNDRV_PCM_RATE_24000;
 	if (snd_ac97_test_rate(ac97, reg, shadow_reg, 32000))
 		result |= SNDRV_PCM_RATE_32000;
 	if (snd_ac97_test_rate(ac97, reg, shadow_reg, 44100))
@@ -2090,13 +2092,17 @@ int snd_ac97_mixer(struct snd_ac97_bus *bus, struct snd_ac97_template *template,
 	pid = look_for_codec_id(snd_ac97_codec_ids, ac97->id);
 	if (pid)
 		ac97->flags |= pid->flags;
-	
+
 	/* test for AC'97 */
 	if (!(ac97->scaps & AC97_SCAP_SKIP_AUDIO) && !(ac97->scaps & AC97_SCAP_AUDIO)) {
-		/* test if we can write to the record gain volume register */
-		snd_ac97_write_cache(ac97, AC97_REC_GAIN, 0x8a06);
-		if (((err = snd_ac97_read(ac97, AC97_REC_GAIN)) & 0x7fff) == 0x0a06)
+		if ((ac97->scaps & AC97_SCAP_DETECT_BY_VENDOR)) {
 			ac97->scaps |= AC97_SCAP_AUDIO;
+		} else {
+			/* test if we can write to the record gain volume register */
+			snd_ac97_write_cache(ac97, AC97_REC_GAIN, 0x8a06);
+			if (((err = snd_ac97_read(ac97, AC97_REC_GAIN)) & 0x7fff) == 0x0a06)
+				ac97->scaps |= AC97_SCAP_AUDIO;
+		}
 	}
 	if (ac97->scaps & AC97_SCAP_AUDIO) {
 		ac97->caps = snd_ac97_read(ac97, AC97_RESET);
